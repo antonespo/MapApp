@@ -41,14 +41,6 @@ export class MapComponent implements AfterViewInit, OnDestroy {
       }
     );
 
-    var overlays = {
-      Marker: Leaflet.marker([41.125278, 16.866667], {
-        draggable: true,
-      }),
-      Marker2: Leaflet.marker([41.1, 16.866667], {
-        draggable: true,
-      }),
-    };
     // leaflet map init
     const map = Leaflet.map('map', {
       maxBounds: [
@@ -57,6 +49,19 @@ export class MapComponent implements AfterViewInit, OnDestroy {
       ],
       layers: [OpenStreet],
     }).setView([41.125278, 16.866667], 16);
+
+    var deliveryPoints = new Leaflet.LayerGroup([
+      Leaflet.marker([41.125278, 16.866667], {
+        draggable: false,
+      }),
+    ]);
+
+    var drawing = new Leaflet.FeatureGroup().addTo(map);
+
+    var overlays = {
+      'Delivery points': deliveryPoints,
+      'Restricted areas': drawing,
+    };
 
     // scale control
     const scale = Leaflet.control.scale();
@@ -68,24 +73,28 @@ export class MapComponent implements AfterViewInit, OnDestroy {
     scale.addTo(map);
     layers.addTo(map);
 
-    var drawnItems = new Leaflet.FeatureGroup();
-    map.addLayer(drawnItems);
+    // var drawnItems = new Leaflet.FeatureGroup();
+    // map.addLayer(drawnItems);
 
     var drawControl = new Leaflet.Control.Draw({
       edit: {
-        featureGroup: drawnItems,
+        featureGroup: overlays['Restricted areas'],
       },
     });
     map.addControl(drawControl);
 
     map.on('draw:created', function (e) {
       var layer = e.layer;
-      drawnItems.addLayer(layer);
-      // overlays.Marker3 = Leaflet.marker(layer.toGeoJSON().geometry.coordinates);
-      // const layers = Leaflet.control.layers(baseMaps, overlays);
-      // layers.addTo(map);
+      overlays['Restricted areas'].addLayer(layer);
       console.log(JSON.stringify(layer.toGeoJSON()));
       console.log(layer.toGeoJSON());
+    });
+
+    map.on('draw:edited', function (e: any) {
+      let layers = e.layers;
+      layers.eachLayer(function (layer: any) {
+        console.log(layer);
+      });
     });
 
     // map.on(Leaflet.Draw.Event.CREATED, (e: any) => {
