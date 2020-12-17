@@ -1,0 +1,30 @@
+#map {
+  width: 100vw;
+  height: 100vh;
+}
+
+.gridTileCoordinates {
+  margin: 0;
+  position: absolute;
+  width: 100%;
+  padding: 10px;
+  z-index: 9;
+}
+.gridTileZoom {
+  display: flex;
+  position: absolute;
+  height: 100%;
+  width: 100%;
+  justify-content: center;
+  align-items: center;
+  z-index: 8;
+}
+
+.leaflet-zoom-control {
+  width: 60px;
+  height: 22px;
+  text-align: center;
+  font: bold 12px/20px Tahoma, Verdana, sans-serif;
+  background-color: white;
+  cursor: default;
+}
