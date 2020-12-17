@@ -11,16 +11,69 @@ import 'leaflet/dist/images/marker-icon-2x.png';
   styleUrls: ['./map.component.css'],
 })
 export class MapComponent implements AfterViewInit, OnDestroy {
-  private map: any;
+  private map: Leaflet.DrawMap;
+  private actualLayer: Leaflet.FeatureGroup<any>;
+  private editableLayer: Leaflet.FeatureGroup<any>;
+  private baseMaps: Leaflet.Control.LayersObject;
+  private overlays: {
+    DeliveryPoints: Leaflet.FeatureGroup<any>;
+    RestrictedAreas: Leaflet.FeatureGroup<any>;
+    Lanes: Leaflet.FeatureGroup<any>;
+  };
+  private editableLayerProp: string = 'DeliveryPoints';
 
   constructor() {}
 
   ngAfterViewInit(): void {
     this.initMap();
+    this.initLayers();
+    this.addDeliveryPoints();
+    this.assignEditableLayer();
+    this.addLayersToMap();
   }
 
   ngOnDestroy() {
     this.map.remove();
+  }
+
+  printer(layer: Leaflet.Layer) {
+    switch (true) {
+      case layer instanceof Leaflet.Rectangle:
+        alert(
+          `The Rectangle coordinates are: \n${(layer as Leaflet.Rectangle)
+            .getLatLngs()
+            .toString()}`
+        );
+        break;
+
+      case layer instanceof Leaflet.Circle:
+        alert(
+          `The Circle coordinates are: \n${(layer as Leaflet.Circle)
+            .getLatLng()
+            .toString()} \nThe Circle radius is: \n ${(layer as Leaflet.Circle)
+            .getRadius()
+            .toString()}`
+        );
+        break;
+
+      case layer instanceof Leaflet.Polygon:
+        alert(
+          `The Polygon coordinates are: \n${(layer as Leaflet.Polygon)
+            .getLatLngs()
+            .toString()}`
+        );
+        break;
+
+      default:
+        break;
+    }
+  }
+
+  addDeliveryPoints() {
+    var marker = Leaflet.marker([41.125278, 16.866667], {
+      draggable: false,
+    });
+    marker.addTo(this.overlays.DeliveryPoints);
   }
 
   initMap() {
@@ -42,7 +95,7 @@ export class MapComponent implements AfterViewInit, OnDestroy {
     );
 
     // leaflet map init
-    const map = Leaflet.map('map', {
+    this.map = Leaflet.map('map', {
       maxBounds: [
         [-90, -180],
         [90, 180],
@@ -50,74 +103,89 @@ export class MapComponent implements AfterViewInit, OnDestroy {
       layers: [OpenStreet],
     }).setView([41.125278, 16.866667], 16);
 
-    var deliveryPoints = new Leaflet.LayerGroup([
-      Leaflet.marker([41.125278, 16.866667], {
-        draggable: false,
-      }),
-    ]);
-
-    var drawing = new Leaflet.FeatureGroup().addTo(map);
-
-    var overlays = {
-      'Delivery points': deliveryPoints,
-      'Restricted areas': drawing,
-    };
-
-    // scale control
     const scale = Leaflet.control.scale();
+    scale.addTo(this.map);
+    this.baseMaps = { Google, OpenStreet };
+  }
 
-    // layers control
-    const baseMaps = { Google, OpenStreet };
-    const layers = Leaflet.control.layers(baseMaps, overlays);
+  initLayers() {
+    this.overlays = {
+      DeliveryPoints: new Leaflet.FeatureGroup().addTo(this.map),
+      RestrictedAreas: new Leaflet.FeatureGroup().addTo(this.map),
+      Lanes: new Leaflet.FeatureGroup().addTo(this.map),
+    };
+    this.actualLayer = this.overlays.Lanes;
+  }
 
-    scale.addTo(map);
-    layers.addTo(map);
+  assignEditableLayer() {
+    var o = this.overlays;
+    const prop = this.editableLayerProp as keyof typeof o;
+    this.editableLayer = this.overlays[prop];
+  }
 
-    // var drawnItems = new Leaflet.FeatureGroup();
-    // map.addLayer(drawnItems);
+  addLayersToMap() {
+    const layers = Leaflet.control.layers(this.baseMaps, this.overlays);
+    layers.addTo(this.map);
+  }
 
+  createFeatureHandler() {
+    this.map.on('draw:created', (e: any) => {
+      switch (e.layerType) {
+        case 'polyline':
+          this.actualLayer = this.overlays.Lanes;
+          break;
+        case 'marker':
+          this.actualLayer = this.overlays.DeliveryPoints;
+          break;
+
+        default:
+          this.actualLayer = this.overlays.RestrictedAreas;
+          break;
+      }
+      var layer = e.layer;
+      this.actualLayer.addLayer(layer);
+      this.printer(layer);
+    });
+  }
+
+  editFeatureHandler() {
+    this.map.on('draw:edited', (e: any) => {
+      let layers = e.layers;
+      layers.eachLayer((layer: Leaflet.Layer) => {
+        this.printer(layer);
+      });
+    });
+  }
+
+  enableDrawingControls() {
+    var drawControl = new Leaflet.Control.Draw({
+      draw: {
+        circlemarker: false,
+      },
+    });
+    this.map.addControl(drawControl);
+    this.createFeatureHandler();
+  }
+
+  enableDrawingAndEditControls() {
     var drawControl = new Leaflet.Control.Draw({
       draw: {
         circlemarker: false,
       },
       edit: {
-        featureGroup: overlays['Restricted areas'],
+        featureGroup: this.editableLayer,
       },
     });
-    map.addControl(drawControl);
+    this.map.addControl(drawControl);
+    this.createFeatureHandler();
+    this.editFeatureHandler();
+  }
 
-    map.on('draw:created', function (e) {
-      var layer = e.layer;
-      overlays['Restricted areas'].addLayer(layer);
-      // console.log(JSON.stringify(layer.toGeoJSON()));
-      printer(layer);
-    });
-
-    map.on('draw:edited', function (e: any) {
-      let layers = e.layers;
-      layers.eachLayer(function (layer: Leaflet.Layer) {
-        printer(layer);
-      });
-    });
-
-    const printer = (layer: Leaflet.Layer) => {
-      switch (true) {
-        case layer instanceof Leaflet.Rectangle:
-          console.log('Rectangle');
-          console.log((layer as Leaflet.Rectangle).getLatLngs().toString());
-          break;
-
-        case layer instanceof Leaflet.Circle:
-          console.log('Circle');
-          console.log((layer as Leaflet.Circle).getLatLng().toString());
-          console.log((layer as Leaflet.Circle).getRadius().toString());
-          break;
-
-        default:
-          break;
-      }
-    };
-
+  oldStuff() {
+    // const printAlert = <T>(type: T, latlng: string, radius?: string )=>{
+    //   var text = `The Rectangle coordinates are: \n${latlng} \n`
+    //   if()
+    // }
     // map.on(Leaflet.Draw.Event.CREATED, (e: any) => {
     //   var type = e.layerType,
     //     layer = e.layer;
@@ -127,7 +195,6 @@ export class MapComponent implements AfterViewInit, OnDestroy {
     //   // Do whatever else you need to. (save to db; add to map etc)
     //   map.addLayer(layer);
     // });
-
     // var imageUrl = '../../../assets/images/map_plant.png';
     // Leaflet.imageOverlay(
     //   imageUrl,
@@ -137,7 +204,6 @@ export class MapComponent implements AfterViewInit, OnDestroy {
     //   ],
     //   { opacity: 1 }
     // ).addTo(this.map);
-
     // var circle = Leaflet.circle([5, 5], {
     //   color: 'red',
     //   fillColor: '#f03',
@@ -145,7 +211,6 @@ export class MapComponent implements AfterViewInit, OnDestroy {
     //   radius: 5000,
     // }).addTo(this.map);
     // circle.bindPopup('<b>Hello world!</b><br>I am a circle.').openPopup();
-
     // // antPath(
     // //   [
     // //     [28.6448, 77.216721],
@@ -153,22 +218,18 @@ export class MapComponent implements AfterViewInit, OnDestroy {
     // //   ],
     // //   { color: '#FF0000', weight: 5, opacity: 0.6 }
     // // ).addTo(this.map);
-
     // this.map = Leaflet.map('map', { crs: Leaflet.CRS.Simple, minZoom: -1 });
     // var bounds = [
     //   [0, 0],
     //   [1000, 1000],
     // ] as Leaflet.LatLngBoundsExpression;
-
     // var imageUrl = '../../../assets/images/map_plant.png';
     // Leaflet.imageOverlay(imageUrl, bounds).addTo(this.map);
     // this.map.fitBounds(bounds);
-
     // var markerPos = Leaflet.latLng([100, 100]);
     // var marker = Leaflet.marker(markerPos, {
     //   draggable: true,
     // }).addTo(this.map);
-
     // marker.on('drag', (e) => console.log(e));
   }
 }

@@ -1,5 +1,13 @@
-<div class="map-container">
-  <div id="map"></div>
+<div class="container">
+  <button class="btn btn-primary" (click)="enableDrawingControls()">
+    Creation Mode
+  </button>
+  <button class="btn btn-primary" (click)="enableDrawingAndEditControls()">
+    Edit Mode
+  </button>
+  <div class="map-container">
+    <div id="map"></div>
+  </div>
 </div>
 
 <!-- // .map-container {
