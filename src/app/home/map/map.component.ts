@@ -77,6 +77,9 @@ export class MapComponent implements AfterViewInit, OnDestroy {
     // map.addLayer(drawnItems);
 
     var drawControl = new Leaflet.Control.Draw({
+      draw: {
+        circlemarker: false,
+      },
       edit: {
         featureGroup: overlays['Restricted areas'],
       },
@@ -86,16 +89,34 @@ export class MapComponent implements AfterViewInit, OnDestroy {
     map.on('draw:created', function (e) {
       var layer = e.layer;
       overlays['Restricted areas'].addLayer(layer);
-      console.log(JSON.stringify(layer.toGeoJSON()));
-      console.log(layer.toGeoJSON());
+      // console.log(JSON.stringify(layer.toGeoJSON()));
+      printer(layer);
     });
 
     map.on('draw:edited', function (e: any) {
       let layers = e.layers;
-      layers.eachLayer(function (layer: any) {
-        console.log(layer);
+      layers.eachLayer(function (layer: Leaflet.Layer) {
+        printer(layer);
       });
     });
+
+    const printer = (layer: Leaflet.Layer) => {
+      switch (true) {
+        case layer instanceof Leaflet.Rectangle:
+          console.log('Rectangle');
+          console.log((layer as Leaflet.Rectangle).getLatLngs().toString());
+          break;
+
+        case layer instanceof Leaflet.Circle:
+          console.log('Circle');
+          console.log((layer as Leaflet.Circle).getLatLng().toString());
+          console.log((layer as Leaflet.Circle).getRadius().toString());
+          break;
+
+        default:
+          break;
+      }
+    };
 
     // map.on(Leaflet.Draw.Event.CREATED, (e: any) => {
     //   var type = e.layerType,
