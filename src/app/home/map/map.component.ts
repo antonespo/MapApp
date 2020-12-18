@@ -5,6 +5,11 @@ import 'leaflet-draw';
 import 'leaflet/dist/images/marker-shadow.png';
 import 'leaflet/dist/images/marker-icon-2x.png';
 
+export interface ILayer {
+  layerName: string;
+  enabled: boolean;
+}
+
 @Component({
   selector: 'app-map',
   templateUrl: './map.component.html',
@@ -20,16 +25,25 @@ export class MapComponent implements AfterViewInit, OnDestroy {
     RestrictedAreas: Leaflet.FeatureGroup<any>;
     Lanes: Leaflet.FeatureGroup<any>;
   };
-  private editableLayerProp: string = 'DeliveryPoints';
+  private editableLayerProp: string = 'RestrictedAreas';
+  private drawEditControl: Leaflet.Control;
+  public layers: ILayer[];
 
   constructor() {}
 
   ngAfterViewInit(): void {
+    this.layers = [
+      { layerName: 'DeliveryPoints', enabled: true },
+      { layerName: 'RestrictedAreas', enabled: true },
+      { layerName: 'Lanes', enabled: true },
+    ];
+
     this.initMap();
-    this.initLayers();
+    this.initLayers(this.layers);
     this.addDeliveryPoints();
     this.assignEditableLayer();
     this.addLayersToMap();
+    this.enableDrawControl(false);
   }
 
   ngOnDestroy() {
@@ -108,12 +122,13 @@ export class MapComponent implements AfterViewInit, OnDestroy {
     this.baseMaps = { Google, OpenStreet };
   }
 
-  initLayers() {
+  initLayers(layers: ILayer[]) {
     this.overlays = {
       DeliveryPoints: new Leaflet.FeatureGroup().addTo(this.map),
       RestrictedAreas: new Leaflet.FeatureGroup().addTo(this.map),
       Lanes: new Leaflet.FeatureGroup().addTo(this.map),
     };
+    this.overlays;
     this.actualLayer = this.overlays.Lanes;
   }
 
@@ -157,26 +172,29 @@ export class MapComponent implements AfterViewInit, OnDestroy {
     });
   }
 
-  enableDrawingControls() {
-    var drawControl = new Leaflet.Control.Draw({
-      draw: {
-        circlemarker: false,
-      },
-    });
-    this.map.addControl(drawControl);
-    this.createFeatureHandler();
-  }
-
-  enableDrawingAndEditControls() {
-    var drawControl = new Leaflet.Control.Draw({
-      draw: {
-        circlemarker: false,
-      },
-      edit: {
-        featureGroup: this.editableLayer,
-      },
-    });
-    this.map.addControl(drawControl);
+  enableDrawControl(editMode: boolean) {
+    this.map.zoomIn();
+    var options: Leaflet.Control.DrawConstructorOptions;
+    if (editMode) {
+      options = {
+        draw: {
+          circlemarker: false,
+        },
+        edit: {
+          featureGroup: this.editableLayer,
+        },
+      };
+    } else {
+      options = {
+        draw: {
+          circlemarker: false,
+        },
+      };
+    }
+    if (!this.drawEditControl) {
+      this.drawEditControl = new Leaflet.Control.Draw(options);
+    }
+    this.map.addControl(this.drawEditControl);
     this.createFeatureHandler();
     this.editFeatureHandler();
   }
