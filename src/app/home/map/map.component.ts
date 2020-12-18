@@ -15,8 +15,9 @@ export interface ILayer {
   layerName: string;
   enabled: boolean;
   editable: boolean;
-  features: FeatureType[];
+  featureTypes: FeatureType[];
   color: string;
+  features: (Leaflet.Path | Leaflet.Marker)[];
 }
 
 export interface IMapProps {
@@ -57,10 +58,29 @@ export class MapComponent implements AfterViewInit, OnDestroy {
 
   ngAfterViewInit(): void {
     this.initMap();
-    // this.addDeliveryPoints();
     this.layersCreation();
     this.addLayersToMap();
+    this.addFeatures();
     if (this.mapProps.drawable) this.enableDrawControl(this.mapProps.editable);
+  }
+
+  addFeatures() {
+    this.layers.forEach((layer) => {
+      layer.features.forEach((feature) => {
+        this.addCustomFeatureSytle(feature, layer);
+        feature.addTo(this.overlays[`${layer.layerName}`]);
+      });
+    });
+  }
+
+  addCustomFeatureSytle(feature: Leaflet.Path | Leaflet.Marker, layer: ILayer) {
+    feature.bindTooltip(this.printer(feature));
+    if (feature instanceof Leaflet.Path) {
+      feature.options.color = layer.color;
+      feature.options.weight = 5;
+      feature.options.opacity = 0.6;
+      feature.options.fillOpacity = 0.2;
+    }
   }
 
   ngOnDestroy() {
@@ -72,7 +92,11 @@ export class MapComponent implements AfterViewInit, OnDestroy {
       case layer instanceof Leaflet.Rectangle:
         return `The Rectangle coordinates are: \n${(layer as Leaflet.Rectangle)
           .getLatLngs()
-          .toString()}`;
+          .toString()}\nThe Rectangle bonuds are: \n ${(layer as Leaflet.Rectangle)
+          .getBounds()
+          .getSouthEast()} \n${(layer as Leaflet.Rectangle)
+          .getBounds()
+          .getNorthWest()}`;
         break;
 
       case layer instanceof Leaflet.Circle:
@@ -107,13 +131,6 @@ export class MapComponent implements AfterViewInit, OnDestroy {
     }
   }
 
-  // addDeliveryPoints() {
-  //   var marker = Leaflet.marker([41.125278, 16.866667], {
-  //     draggable: false,
-  //   });
-  //   marker.addTo(this.overlays.DeliveryPoints);
-  // }
-
   initMap() {
     // openstreet tile layer and its settings
     const OpenStreet = Leaflet.tileLayer(
@@ -139,7 +156,7 @@ export class MapComponent implements AfterViewInit, OnDestroy {
         [90, 180],
       ],
       layers: [OpenStreet],
-    }).setView([41.125278, 16.866667], 16);
+    }).setView([41.125278, 16.866667], 17);
 
     const scale = Leaflet.control.scale();
     scale.addTo(this.map);
@@ -149,7 +166,7 @@ export class MapComponent implements AfterViewInit, OnDestroy {
   findLayerByFeature(feature: FeatureType) {
     var layer: ILayer | undefined;
     this.layers.forEach((l) => {
-      if (l.features.includes(feature)) layer = l;
+      if (l.featureTypes.includes(feature)) layer = l;
     });
     return layer;
   }
@@ -157,7 +174,7 @@ export class MapComponent implements AfterViewInit, OnDestroy {
   listAvailableFeatures() {
     var features: FeatureAvailable = {};
     this.layers.forEach((layer) => {
-      layer.features.forEach((feature) => {
+      layer.featureTypes.forEach((feature) => {
         switch (feature) {
           case FeatureType.circle:
             features.circle = true;
@@ -225,9 +242,8 @@ export class MapComponent implements AfterViewInit, OnDestroy {
         default:
           break;
       }
-      layer.options.color = lay?.color;
+      if (lay) this.addCustomFeatureSytle(layer, lay);
       layer.bindTooltip(this.printer(layer));
-
       if (lay) layer.addTo(this.overlays[`${lay.layerName}`]);
 
       alert(this.printer(layer));
@@ -256,7 +272,6 @@ export class MapComponent implements AfterViewInit, OnDestroy {
   }
 
   enableDrawControl(editMode: boolean) {
-    this.map.zoomIn();
     var options: Leaflet.Control.DrawConstructorOptions;
     var edit: Leaflet.Control.EditOptions = {
       featureGroup: this.editableLayer,
