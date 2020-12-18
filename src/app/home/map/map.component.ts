@@ -142,7 +142,7 @@ export class MapComponent implements AfterViewInit, OnDestroy {
     );
 
     const Google = Leaflet.tileLayer(
-      'http://www.google.cn/maps/vt?lyrs=s@189&gl=tr&x={x}&y={y}&z={z}',
+      'http://mt0.google.com/vt/lyrs=y&hl=en&x={x}&y={y}&z={z}&s=Ga',
       {
         attribution: 'google',
         noWrap: true,
@@ -246,7 +246,7 @@ export class MapComponent implements AfterViewInit, OnDestroy {
       layer.bindTooltip(this.printer(layer));
       if (lay) layer.addTo(this.overlays[`${lay.layerName}`]);
 
-      alert(this.printer(layer));
+      // alert(this.printer(layer));
     });
   }
 
@@ -254,7 +254,7 @@ export class MapComponent implements AfterViewInit, OnDestroy {
     this.map.on('draw:edited', (e: any) => {
       let layers = e.layers;
       layers.eachLayer((layer: Leaflet.Layer) => {
-        alert(this.printer(layer));
+        // alert(this.printer(layer));
       });
     });
   }

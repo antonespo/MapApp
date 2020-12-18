@@ -1,14 +1,4 @@
-import {
-  AfterContentInit,
-  Component,
-  ContentChild,
-  ElementRef,
-  Input,
-  OnChanges,
-  OnDestroy,
-  OnInit,
-  SimpleChanges,
-} from '@angular/core';
+import { Component } from '@angular/core';
 import * as Leaflet from 'leaflet';
 import { FeatureType, ILayer, IMapProps } from './map/map.component';
 
