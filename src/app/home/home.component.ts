@@ -9,11 +9,7 @@ import {
   OnInit,
   SimpleChanges,
 } from '@angular/core';
-
-export interface IUser {
-  name: string;
-  age: number;
-}
+import { FeatureType, ILayer, IMapProps } from './map/map.component';
 
 @Component({
   selector: 'app-home',
@@ -21,14 +17,34 @@ export interface IUser {
   styleUrls: ['./home.component.css'],
 })
 export class HomeComponent {
-  activeUsers: IUser[] = [
-    { name: 'Antonio', age: 22 },
-    { name: 'Mario', age: 24 },
-  ];
-  inactiveUsers: IUser[] = [
-    { name: 'Mario', age: 29 },
-    { name: 'Alessandro', age: 27 },
+  public layers: ILayer[] = [
+    {
+      layerName: 'Delivery Points',
+      enabled: true,
+      editable: true,
+      features: [FeatureType.marker],
+      color: '#000099',
+    },
+    {
+      layerName: 'Restricted Areas',
+      enabled: true,
+      editable: false,
+      features: [
+        FeatureType.polygon,
+        FeatureType.rectangle,
+        FeatureType.circle,
+      ],
+      color: '#f00',
+    },
+    {
+      layerName: 'Lanes',
+      enabled: true,
+      editable: false,
+      features: [FeatureType.polyline],
+      color: '#013220',
+    },
   ];
 
+  public mapProps: IMapProps = { drawable: true, editable: true };
   constructor() {}
 }

@@ -1,4 +1,10 @@
-import { AfterViewInit, Component, OnDestroy, OnInit } from '@angular/core';
+import {
+  AfterViewInit,
+  Component,
+  Input,
+  OnDestroy,
+  OnInit,
+} from '@angular/core';
 import * as Leaflet from 'leaflet';
 import { antPath } from 'leaflet-ant-path';
 import 'leaflet-draw';
@@ -8,6 +14,30 @@ import 'leaflet/dist/images/marker-icon-2x.png';
 export interface ILayer {
   layerName: string;
   enabled: boolean;
+  editable: boolean;
+  features: FeatureType[];
+  color: string;
+}
+
+export interface IMapProps {
+  drawable: boolean;
+  editable: boolean;
+}
+
+export enum FeatureType {
+  polyline,
+  polygon,
+  rectangle,
+  circle,
+  marker,
+}
+
+interface FeatureAvailable {
+  polyline?: boolean;
+  polygon?: boolean;
+  rectangle?: boolean;
+  circle?: boolean;
+  marker?: boolean;
 }
 
 @Component({
@@ -16,34 +46,21 @@ export interface ILayer {
   styleUrls: ['./map.component.css'],
 })
 export class MapComponent implements AfterViewInit, OnDestroy {
+  @Input() layers: ILayer[];
+  @Input() mapProps: IMapProps;
   private map: Leaflet.DrawMap;
-  private actualLayer: Leaflet.FeatureGroup<any>;
   private editableLayer: Leaflet.FeatureGroup<any>;
   private baseMaps: Leaflet.Control.LayersObject;
-  private overlays: {
-    DeliveryPoints: Leaflet.FeatureGroup<any>;
-    RestrictedAreas: Leaflet.FeatureGroup<any>;
-    Lanes: Leaflet.FeatureGroup<any>;
-  };
-  private editableLayerProp: string = 'RestrictedAreas';
-  private drawEditControl: Leaflet.Control;
-  public layers: ILayer[];
+  private overlays: { [key: string]: Leaflet.FeatureGroup } = {};
 
   constructor() {}
 
   ngAfterViewInit(): void {
-    this.layers = [
-      { layerName: 'DeliveryPoints', enabled: true },
-      { layerName: 'RestrictedAreas', enabled: true },
-      { layerName: 'Lanes', enabled: true },
-    ];
-
     this.initMap();
-    this.initLayers(this.layers);
-    this.addDeliveryPoints();
-    this.assignEditableLayer();
+    // this.addDeliveryPoints();
+    this.layersCreation();
     this.addLayersToMap();
-    this.enableDrawControl(false);
+    if (this.mapProps.drawable) this.enableDrawControl(this.mapProps.editable);
   }
 
   ngOnDestroy() {
@@ -53,42 +70,49 @@ export class MapComponent implements AfterViewInit, OnDestroy {
   printer(layer: Leaflet.Layer) {
     switch (true) {
       case layer instanceof Leaflet.Rectangle:
-        alert(
-          `The Rectangle coordinates are: \n${(layer as Leaflet.Rectangle)
-            .getLatLngs()
-            .toString()}`
-        );
+        return `The Rectangle coordinates are: \n${(layer as Leaflet.Rectangle)
+          .getLatLngs()
+          .toString()}`;
         break;
 
       case layer instanceof Leaflet.Circle:
-        alert(
-          `The Circle coordinates are: \n${(layer as Leaflet.Circle)
-            .getLatLng()
-            .toString()} \nThe Circle radius is: \n ${(layer as Leaflet.Circle)
-            .getRadius()
-            .toString()}`
-        );
+        return `The Circle coordinates are: \n${(layer as Leaflet.Circle)
+          .getLatLng()
+          .toString()} \nThe Circle radius is: \n ${(layer as Leaflet.Circle)
+          .getRadius()
+          .toString()}`;
         break;
 
       case layer instanceof Leaflet.Polygon:
-        alert(
-          `The Polygon coordinates are: \n${(layer as Leaflet.Polygon)
-            .getLatLngs()
-            .toString()}`
-        );
+        return `The Polygon coordinates are: \n${(layer as Leaflet.Polygon)
+          .getLatLngs()
+          .toString()}`;
+        break;
+
+      case layer instanceof Leaflet.Marker:
+        return `The Marker coordinates are: \n${(layer as Leaflet.Marker)
+          .getLatLng()
+          .toString()}`;
+        break;
+
+      case layer instanceof Leaflet.Polyline:
+        return `The Polyline coordinates are: \n${(layer as Leaflet.Polyline)
+          .getLatLngs()
+          .toString()}`;
         break;
 
       default:
+        return '';
         break;
     }
   }
 
-  addDeliveryPoints() {
-    var marker = Leaflet.marker([41.125278, 16.866667], {
-      draggable: false,
-    });
-    marker.addTo(this.overlays.DeliveryPoints);
-  }
+  // addDeliveryPoints() {
+  //   var marker = Leaflet.marker([41.125278, 16.866667], {
+  //     draggable: false,
+  //   });
+  //   marker.addTo(this.overlays.DeliveryPoints);
+  // }
 
   initMap() {
     // openstreet tile layer and its settings
@@ -122,44 +146,91 @@ export class MapComponent implements AfterViewInit, OnDestroy {
     this.baseMaps = { Google, OpenStreet };
   }
 
-  initLayers(layers: ILayer[]) {
-    this.overlays = {
-      DeliveryPoints: new Leaflet.FeatureGroup().addTo(this.map),
-      RestrictedAreas: new Leaflet.FeatureGroup().addTo(this.map),
-      Lanes: new Leaflet.FeatureGroup().addTo(this.map),
-    };
-    this.overlays;
-    this.actualLayer = this.overlays.Lanes;
+  findLayerByFeature(feature: FeatureType) {
+    var layer: ILayer | undefined;
+    this.layers.forEach((l) => {
+      if (l.features.includes(feature)) layer = l;
+    });
+    return layer;
   }
 
-  assignEditableLayer() {
-    var o = this.overlays;
-    const prop = this.editableLayerProp as keyof typeof o;
-    this.editableLayer = this.overlays[prop];
+  listAvailableFeatures() {
+    var features: FeatureAvailable = {};
+    this.layers.forEach((layer) => {
+      layer.features.forEach((feature) => {
+        switch (feature) {
+          case FeatureType.circle:
+            features.circle = true;
+            break;
+          case FeatureType.marker:
+            features.marker = true;
+            break;
+          case FeatureType.polygon:
+            features.polygon = true;
+            break;
+          case FeatureType.polyline:
+            features.polyline = true;
+            break;
+          case FeatureType.rectangle:
+            features.rectangle = true;
+            break;
+          default:
+            break;
+        }
+      });
+    });
+    return features;
+  }
+
+  layersCreation() {
+    this.layers.forEach((layer) => {
+      this.overlays[`${layer.layerName}`] = new Leaflet.FeatureGroup();
+      if (layer.enabled) {
+        this.overlays[`${layer.layerName}`].addTo(this.map);
+      }
+      if (layer.editable) {
+        this.editableLayer = this.overlays[`${layer.layerName}`];
+      }
+    });
   }
 
   addLayersToMap() {
-    const layers = Leaflet.control.layers(this.baseMaps, this.overlays);
+    const layers = Leaflet.control.layers(this.baseMaps, this.overlays, {
+      collapsed: false,
+      hideSingleBase: true,
+    });
     layers.addTo(this.map);
   }
 
   createFeatureHandler() {
     this.map.on('draw:created', (e: any) => {
+      var layer = e.layer;
       switch (e.layerType) {
         case 'polyline':
-          this.actualLayer = this.overlays.Lanes;
+          var lay = this.findLayerByFeature(FeatureType.polyline);
+          break;
+        case 'polygon':
+          var lay = this.findLayerByFeature(FeatureType.polygon);
+          break;
+        case 'rectangle':
+          var lay = this.findLayerByFeature(FeatureType.rectangle);
+          break;
+        case 'circle':
+          var lay = this.findLayerByFeature(FeatureType.circle);
           break;
         case 'marker':
-          this.actualLayer = this.overlays.DeliveryPoints;
+          var lay = this.findLayerByFeature(FeatureType.marker);
           break;
 
         default:
-          this.actualLayer = this.overlays.RestrictedAreas;
           break;
       }
-      var layer = e.layer;
-      this.actualLayer.addLayer(layer);
-      this.printer(layer);
+      layer.options.color = lay?.color;
+      layer.bindTooltip(this.printer(layer));
+
+      if (lay) layer.addTo(this.overlays[`${lay.layerName}`]);
+
+      alert(this.printer(layer));
     });
   }
 
@@ -167,34 +238,37 @@ export class MapComponent implements AfterViewInit, OnDestroy {
     this.map.on('draw:edited', (e: any) => {
       let layers = e.layers;
       layers.eachLayer((layer: Leaflet.Layer) => {
-        this.printer(layer);
+        alert(this.printer(layer));
       });
     });
+  }
+
+  createDrawObject() {
+    var availableFeature = this.listAvailableFeatures();
+    var draw: Leaflet.Control.DrawOptions = {};
+    if (!availableFeature.circle) draw.circle = false;
+    if (!availableFeature.marker) draw.marker = false;
+    if (!availableFeature.polygon) draw.polygon = false;
+    if (!availableFeature.polyline) draw.polyline = false;
+    if (!availableFeature.rectangle) draw.rectangle = false;
+    draw.circlemarker = false;
+    return draw;
   }
 
   enableDrawControl(editMode: boolean) {
     this.map.zoomIn();
     var options: Leaflet.Control.DrawConstructorOptions;
+    var edit: Leaflet.Control.EditOptions = {
+      featureGroup: this.editableLayer,
+    };
+    var draw = this.createDrawObject();
     if (editMode) {
-      options = {
-        draw: {
-          circlemarker: false,
-        },
-        edit: {
-          featureGroup: this.editableLayer,
-        },
-      };
+      options = { draw, edit };
     } else {
-      options = {
-        draw: {
-          circlemarker: false,
-        },
-      };
+      options = { draw };
     }
-    if (!this.drawEditControl) {
-      this.drawEditControl = new Leaflet.Control.Draw(options);
-    }
-    this.map.addControl(this.drawEditControl);
+    var drawEditControl = new Leaflet.Control.Draw(options);
+    this.map.addControl(drawEditControl);
     this.createFeatureHandler();
     this.editFeatureHandler();
   }
