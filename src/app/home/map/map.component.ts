@@ -90,39 +90,44 @@ export class MapComponent implements AfterViewInit, OnDestroy {
   printer(layer: Leaflet.Layer) {
     switch (true) {
       case layer instanceof Leaflet.Rectangle:
-        return `The Rectangle coordinates are: \n${(layer as Leaflet.Rectangle)
+        return `The <b>Rectangle coordinates</b> are: \n${(layer as Leaflet.Rectangle)
           .getLatLngs()
-          .toString()}\nThe Rectangle bonuds are: \n ${(layer as Leaflet.Rectangle)
-          .getBounds()
-          .getSouthEast()} \n${(layer as Leaflet.Rectangle)
-          .getBounds()
-          .getNorthWest()}`;
+          .toString()
+          .replace(/LatLng/g, '<br>')}`;
         break;
 
       case layer instanceof Leaflet.Circle:
-        return `The Circle coordinates are: \n${(layer as Leaflet.Circle)
+        return `The <b>Circle coordinates</b> are: ${(layer as Leaflet.Circle)
           .getLatLng()
-          .toString()} \nThe Circle radius is: \n ${(layer as Leaflet.Circle)
+          .toString()
+          .replace(
+            /LatLng/g,
+            '<br>'
+          )} <br>The <b>Circle radius</b> is: <br> ${(layer as Leaflet.Circle)
           .getRadius()
-          .toString()}`;
+          .toString()
+          .replace(/LatLng/g, '<br>')}`;
         break;
 
       case layer instanceof Leaflet.Polygon:
-        return `The Polygon coordinates are: \n${(layer as Leaflet.Polygon)
+        return `The <b>Polygon coordinates</b> are: ${(layer as Leaflet.Polygon)
           .getLatLngs()
-          .toString()}`;
+          .toString()
+          .replace(/LatLng/g, '<br>')}`;
         break;
 
       case layer instanceof Leaflet.Marker:
-        return `The Marker coordinates are: \n${(layer as Leaflet.Marker)
+        return `The <b>Marker coordinates</b> are: ${(layer as Leaflet.Marker)
           .getLatLng()
-          .toString()}`;
+          .toString()
+          .replace(/LatLng/g, '<br>')}`;
         break;
 
       case layer instanceof Leaflet.Polyline:
-        return `The Polyline coordinates are: \n${(layer as Leaflet.Polyline)
+        return `The <b>Polyline coordinates</b> are: ${(layer as Leaflet.Polyline)
           .getLatLngs()
-          .toString()}`;
+          .toString()
+          .replace(/LatLng/g, '<br>')}`;
         break;
 
       default:
@@ -317,7 +322,7 @@ export class MapComponent implements AfterViewInit, OnDestroy {
     //   fillOpacity: 0.5,
     //   radius: 5000,
     // }).addTo(this.map);
-    // circle.bindPopup('<b>Hello world!</b><br>I am a circle.').openPopup();
+    // circle.bindPopup('<br>Hello world!</br><br>I am a circle.').openPopup();
     // // antPath(
     // //   [
     // //     [28.6448, 77.216721],
