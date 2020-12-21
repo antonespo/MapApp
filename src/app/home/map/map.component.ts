@@ -10,6 +10,7 @@ import { antPath } from 'leaflet-ant-path';
 import 'leaflet-draw';
 import 'leaflet/dist/images/marker-shadow.png';
 import 'leaflet/dist/images/marker-icon-2x.png';
+import { IMap, MapConverterService } from './../services/map-converter.service';
 
 export interface ILayer {
   layerName: string;
@@ -51,13 +52,21 @@ export class MapComponent implements AfterViewInit, OnDestroy {
   @Input() mapProps: IMapProps;
   private map: Leaflet.DrawMap;
   private editableLayer: Leaflet.FeatureGroup<any>;
-  private baseMaps: Leaflet.Control.LayersObject;
+  private baseMaps: Leaflet.Control.LayersObject | undefined;
   private overlays: { [key: string]: Leaflet.FeatureGroup } = {};
+  private mapData: IMap;
 
-  constructor() {}
+  constructor(private service: MapConverterService) {
+    this.mapData = {
+      data: './../../../assets/images/defined_map.txt',
+      width: 3264,
+      height: 3712,
+    };
+  }
 
-  ngAfterViewInit(): void {
+  async ngAfterViewInit() {
     this.initMap();
+    // await this.initCustomMap();
     this.layersCreation();
     this.addLayersToMap();
     this.addFeatures();
@@ -166,6 +175,19 @@ export class MapComponent implements AfterViewInit, OnDestroy {
     const scale = Leaflet.control.scale();
     scale.addTo(this.map);
     this.baseMaps = { Google, OpenStreet };
+  }
+
+  async initCustomMap() {
+    this.map = Leaflet.map('map', { crs: Leaflet.CRS.Simple, minZoom: -1 });
+    var bounds = [
+      [0, 0],
+      [this.mapData.height, this.mapData.width],
+    ] as Leaflet.LatLngBoundsExpression;
+    // var imageUrl = '../../../assets/images/logistica_bosch.png';
+    var imageUrl = await this.service.providePng(this.mapData);
+    Leaflet.imageOverlay(imageUrl, bounds).addTo(this.map);
+    this.baseMaps = undefined;
+    this.map.fitBounds(bounds);
   }
 
   findLayerByFeature(feature: FeatureType) {
@@ -291,57 +313,5 @@ export class MapComponent implements AfterViewInit, OnDestroy {
     this.map.addControl(drawEditControl);
     this.createFeatureHandler();
     this.editFeatureHandler();
-  }
-
-  oldStuff() {
-    // const printAlert = <T>(type: T, latlng: string, radius?: string )=>{
-    //   var text = `The Rectangle coordinates are: \n${latlng} \n`
-    //   if()
-    // }
-    // map.on(Leaflet.Draw.Event.CREATED, (e: any) => {
-    //   var type = e.layerType,
-    //     layer = e.layer;
-    //   if (type === 'marker') {
-    //     // Do marker specific actions
-    //   }
-    //   // Do whatever else you need to. (save to db; add to map etc)
-    //   map.addLayer(layer);
-    // });
-    // var imageUrl = '../../../assets/images/map_plant.png';
-    // Leaflet.imageOverlay(
-    //   imageUrl,
-    //   [
-    //     [0, 0],
-    //     [10, 10],
-    //   ],
-    //   { opacity: 1 }
-    // ).addTo(this.map);
-    // var circle = Leaflet.circle([5, 5], {
-    //   color: 'red',
-    //   fillColor: '#f03',
-    //   fillOpacity: 0.5,
-    //   radius: 5000,
-    // }).addTo(this.map);
-    // circle.bindPopup('<br>Hello world!</br><br>I am a circle.').openPopup();
-    // // antPath(
-    // //   [
-    // //     [28.6448, 77.216721],
-    // //     [34.1526, 77.5771],
-    // //   ],
-    // //   { color: '#FF0000', weight: 5, opacity: 0.6 }
-    // // ).addTo(this.map);
-    // this.map = Leaflet.map('map', { crs: Leaflet.CRS.Simple, minZoom: -1 });
-    // var bounds = [
-    //   [0, 0],
-    //   [1000, 1000],
-    // ] as Leaflet.LatLngBoundsExpression;
-    // var imageUrl = '../../../assets/images/map_plant.png';
-    // Leaflet.imageOverlay(imageUrl, bounds).addTo(this.map);
-    // this.map.fitBounds(bounds);
-    // var markerPos = Leaflet.latLng([100, 100]);
-    // var marker = Leaflet.marker(markerPos, {
-    //   draggable: true,
-    // }).addTo(this.map);
-    // marker.on('drag', (e) => console.log(e));
   }
 }

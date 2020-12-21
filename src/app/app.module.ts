@@ -24,6 +24,7 @@ import { MapComponent } from './home/map/map.component';
     HttpClientModule,
     BrowserAnimationsModule,
     FormsModule,
+    HttpClientModule,
     BsDropdownModule.forRoot(),
   ],
   providers: [],

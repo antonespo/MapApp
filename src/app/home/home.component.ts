@@ -51,7 +51,7 @@ export class HomeComponent {
       enabled: true,
       editable: false,
       featureTypes: [FeatureType.polyline],
-      color: '#FF0000',
+      color: '#781f19',
       features: [
         Leaflet.polyline([
           [41.12377, 16.86533],
