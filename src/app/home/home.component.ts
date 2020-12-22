@@ -29,7 +29,7 @@ export class HomeComponent {
         FeatureType.rectangle,
         FeatureType.circle,
       ],
-      color: '#006400',
+      color: '#8b0000',
       features: [
         Leaflet.circle([41.12618, 16.86775], { radius: 115 }),
         Leaflet.polygon([
@@ -51,7 +51,7 @@ export class HomeComponent {
       enabled: true,
       editable: false,
       featureTypes: [FeatureType.polyline],
-      color: '#781f19',
+      color: '#013220',
       features: [
         Leaflet.polyline([
           [41.12377, 16.86533],

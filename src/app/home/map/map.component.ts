@@ -65,8 +65,8 @@ export class MapComponent implements AfterViewInit, OnDestroy {
   }
 
   async ngAfterViewInit() {
-    this.initMap();
-    // await this.initCustomMap();
+    // this.initMap();
+    await this.initCustomMap();
     this.layersCreation();
     this.addLayersToMap();
     this.addFeatures();
@@ -178,11 +178,16 @@ export class MapComponent implements AfterViewInit, OnDestroy {
   }
 
   async initCustomMap() {
-    this.map = Leaflet.map('map', { crs: Leaflet.CRS.Simple, minZoom: -1 });
     var bounds = [
       [0, 0],
       [this.mapData.height, this.mapData.width],
     ] as Leaflet.LatLngBoundsExpression;
+    this.map = Leaflet.map('map', {
+      crs: Leaflet.CRS.Simple,
+      minZoom: -1,
+      maxBounds: bounds,
+      maxBoundsViscosity: 1.0,
+    });
     // var imageUrl = '../../../assets/images/logistica_bosch.png';
     var imageUrl = await this.service.providePng(this.mapData);
     Leaflet.imageOverlay(imageUrl, bounds).addTo(this.map);

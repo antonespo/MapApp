@@ -16,7 +16,7 @@ export class MapConverterService {
   async providePng(mapData: IMap) {
     const w = mapData.width;
     const h = mapData.height;
-    const occupancyGrid: any = await this.http.get(mapData.data).toPromise();
+    var occupancyGrid: any = await this.http.get(mapData.data).toPromise();
     const data = new Uint8ClampedArray(w * h * 4);
 
     for (let i = 0; i < occupancyGrid.length; i++) {
@@ -53,7 +53,6 @@ export class MapConverterService {
           break;
       }
     }
-
     const image = this.getDataUrlFromArr(data, w, h);
     return image;
   }
@@ -62,17 +61,33 @@ export class MapConverterService {
     if (typeof w === 'undefined' || typeof h === 'undefined') {
       w = h = Math.sqrt(arr.length / 4);
     }
-
     const canvas = document.createElement('canvas');
-    const ctx = canvas.getContext('2d');
+    var ctx = canvas.getContext('2d');
+    if (ctx) {
+      canvas.width = w;
+      canvas.height = h;
 
-    canvas.width = w;
-    canvas.height = h;
-
-    const imgData = ctx?.createImageData(w, h);
-    imgData?.data.set(arr);
-    ctx?.putImageData(imgData!, 0, 0);
-
+      const imgData = ctx.createImageData(w, h);
+      imgData.data.set(arr);
+      ctx.putImageData(imgData, 0, 0);
+      this.flipImage(ctx, canvas);
+    }
     return canvas.toDataURL();
+  }
+
+  private flipImage(ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement) {
+    ctx.globalCompositeOperation = 'copy';
+    ctx.scale(1, -1); // Y flip
+    ctx.translate(0, -canvas.height); // so we can draw at 0,0
+    ctx.drawImage(canvas, 0, 0);
+    // now we can restore the context to defaults if needed
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.globalCompositeOperation = 'source-over';
+
+    // Other algorithm to flip image
+    // const data = imgData?.data;
+    // Array.from({ length: h }, (val, i) =>
+    //   data?.slice(i * w * 4, (i + 1) * w * 4)
+    // ).forEach((val, i) => data?.set(val, (h - i - 1) * w * 4));
   }
 }
