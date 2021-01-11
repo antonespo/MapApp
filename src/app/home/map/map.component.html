@@ -1,4 +1,17 @@
 <div class="container">
+  <div class="row" *ngIf="loading">
+    <div id="loader">
+      <div class="dot"></div>
+      <div class="dot"></div>
+      <div class="dot"></div>
+      <div class="dot"></div>
+      <div class="dot"></div>
+      <div class="dot"></div>
+      <div class="dot"></div>
+      <div class="dot"></div>
+      <div class="loading"></div>
+    </div>
+  </div>
   <div class="map-container">
     <div id="map"></div>
   </div>

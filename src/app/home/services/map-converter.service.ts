@@ -1,6 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-
+import { OccupancyGrid } from './../occupancy-grid.model';
 export interface IMap {
   data: string;
   width: number;
@@ -14,6 +14,20 @@ export class MapConverterService {
   constructor(private http: HttpClient) {}
 
   async providePng(mapData: IMap) {
+    // Con Get da server
+    // const res = await this.http
+    //   .get<OccupancyGrid>('https://localhost:44352/api/map/obj', {
+    //     headers: {
+    //       Authorization:
+    //         'Bearer eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJuYW1laWQiOiJMT0lfVXNlciIsIm5iZiI6MTYxMDM1MjYzMSwiZXhwIjoxNjEwOTU3NDMxLCJpYXQiOjE2MTAzNTI2MzF9.grvQJZnQWHCfCPfSu4fvlGh9X_CrC6-STtHi3VAbqUr35UcKB4B1qeynFKXfwjLRPRbz3wcOzwMjDmRLziTvfQ',
+    //     },
+    //   })
+    //   .toPromise();
+    // var occupancyGrid = res.data;
+    // const w = res.info.width;
+    // const h = res.info.height;
+
+    // Con get da file
     const w = mapData.width;
     const h = mapData.height;
     var occupancyGrid: any = await this.http.get(mapData.data).toPromise();

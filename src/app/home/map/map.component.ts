@@ -1,4 +1,5 @@
 import {
+  AfterContentInit,
   AfterViewInit,
   Component,
   Input,
@@ -47,7 +48,7 @@ interface FeatureAvailable {
   templateUrl: './map.component.html',
   styleUrls: ['./map.component.css'],
 })
-export class MapComponent implements AfterViewInit, OnDestroy {
+export class MapComponent implements AfterContentInit, OnDestroy {
   @Input() layers: ILayer[];
   @Input() mapProps: IMapProps;
   private map: Leaflet.DrawMap;
@@ -55,6 +56,7 @@ export class MapComponent implements AfterViewInit, OnDestroy {
   private baseMaps: Leaflet.Control.LayersObject | undefined;
   private overlays: { [key: string]: Leaflet.FeatureGroup } = {};
   private mapData: IMap;
+  loading: boolean = false;
 
   constructor(private service: MapConverterService) {
     this.mapData = {
@@ -64,9 +66,18 @@ export class MapComponent implements AfterViewInit, OnDestroy {
     };
   }
 
-  async ngAfterViewInit() {
+  async getImage() {
+    this.loading = true;
+    // var imageUrl = '../../../assets/images/logistica_bosch.png';
+    const image = await this.service.providePng(this.mapData);
+    this.loading = false;
+    return image;
+  }
+
+  async ngAfterContentInit() {
     // this.initMap();
-    await this.initCustomMap();
+    var image = await this.getImage();
+    this.initCustomMap(image);
     this.layersCreation();
     this.addLayersToMap();
     this.addFeatures();
@@ -177,7 +188,7 @@ export class MapComponent implements AfterViewInit, OnDestroy {
     this.baseMaps = { Google, OpenStreet };
   }
 
-  async initCustomMap() {
+  async initCustomMap(imageUrl: string) {
     var bounds = [
       [0, 0],
       [this.mapData.height, this.mapData.width],
@@ -188,8 +199,6 @@ export class MapComponent implements AfterViewInit, OnDestroy {
       maxBounds: bounds,
       maxBoundsViscosity: 1.0,
     });
-    // var imageUrl = '../../../assets/images/logistica_bosch.png';
-    var imageUrl = await this.service.providePng(this.mapData);
     Leaflet.imageOverlay(imageUrl, bounds).addTo(this.map);
     this.baseMaps = undefined;
     this.map.fitBounds(bounds);
