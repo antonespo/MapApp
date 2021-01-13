@@ -34,6 +34,7 @@
     "leaflet-illustrate": "0.0.3",
     "ngx-bootstrap": "^6.2.0",
     "rxjs": "~6.6.0",
+    "sanitizer": "^0.1.3",
     "tslib": "^2.0.0",
     "zone.js": "~0.10.2"
   },

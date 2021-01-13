@@ -11,7 +11,8 @@ import { antPath } from 'leaflet-ant-path';
 import 'leaflet-draw';
 import 'leaflet/dist/images/marker-shadow.png';
 import 'leaflet/dist/images/marker-icon-2x.png';
-import { IMap, MapConverterService } from './../services/map-converter.service';
+import { MapConverterService } from './../services/map-converter.service';
+import { DomSanitizer } from '@angular/platform-browser';
 
 export interface ILayer {
   layerName: string;
@@ -52,32 +53,26 @@ export class MapComponent implements AfterContentInit, OnDestroy {
   @Input() layers: ILayer[];
   @Input() mapProps: IMapProps;
   private map: Leaflet.DrawMap;
+  image: any;
   private editableLayer: Leaflet.FeatureGroup<any>;
   private baseMaps: Leaflet.Control.LayersObject | undefined;
   private overlays: { [key: string]: Leaflet.FeatureGroup } = {};
-  private mapData: IMap;
   loading: boolean = false;
 
-  constructor(private service: MapConverterService) {
-    this.mapData = {
-      data: './../../../assets/images/defined_map.txt',
-      width: 3264,
-      height: 3712,
-    };
-  }
+  constructor(private service: MapConverterService) {}
 
   async getImage() {
     this.loading = true;
     // var imageUrl = '../../../assets/images/logistica_bosch.png';
-    const image = await this.service.providePng(this.mapData);
+    this.image = await this.service.providePng();
     this.loading = false;
-    return image;
   }
 
   async ngAfterContentInit() {
     // this.initMap();
-    var image = await this.getImage();
-    this.initCustomMap(image);
+    await this.getImage();
+
+    this.initCustomMap(this.image);
     this.layersCreation();
     this.addLayersToMap();
     this.addFeatures();
@@ -191,7 +186,7 @@ export class MapComponent implements AfterContentInit, OnDestroy {
   async initCustomMap(imageUrl: string) {
     var bounds = [
       [0, 0],
-      [this.mapData.height, this.mapData.width],
+      [3712, 3264],
     ] as Leaflet.LatLngBoundsExpression;
     this.map = Leaflet.map('map', {
       crs: Leaflet.CRS.Simple,
