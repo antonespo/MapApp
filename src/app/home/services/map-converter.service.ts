@@ -1,24 +1,41 @@
 import { HttpClient, HttpHeaders } from '@angular/common/http';
-import { Injectable } from '@angular/core';
-import { OccupancyGrid } from './../occupancy-grid.model';
+import { EventEmitter, Injectable } from '@angular/core';
+
+export class IImageDimension {
+  w: number;
+  h: number;
+}
 
 @Injectable({
   providedIn: 'root',
 })
 export class MapConverterService {
   constructor(private http: HttpClient) {}
-  w: number;
-  h: number;
+  private w: number;
+  private h: number;
+  dimension = new EventEmitter<IImageDimension>();
 
   async providePng() {
+    // Get data from server
     const blob = await this.getDataFromServer();
     let image = URL.createObjectURL(blob);
+    var img = new Image();
+    img.src = image;
+    img.onload = (event: any) => {
+      var imageDimension: IImageDimension = {
+        w: event.currentTarget?.width,
+        h: event.currentTarget?.height,
+      };
+      this.dimension.emit(imageDimension);
+    };
     return image;
 
+    // Get data from file
     // const occupancyGrid = await this.getDataFromFile();
     // return this.convertData(occupancyGrid);
   }
 
+  //#region Get data from server
   private async getDataFromServer() {
     // Con Get da server
     var header = new HttpHeaders({
@@ -40,6 +57,9 @@ export class MapConverterService {
     return res;
   }
 
+  //#endregion
+
+  //#region  Get Data from File
   private async getDataFromFile() {
     // Con get da file
     var mapData = {
@@ -127,4 +147,6 @@ export class MapConverterService {
     //   data?.slice(i * w * 4, (i + 1) * w * 4)
     // ).forEach((val, i) => data?.set(val, (h - i - 1) * w * 4));
   }
+
+  //#endregion
 }

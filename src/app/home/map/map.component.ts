@@ -11,7 +11,10 @@ import { antPath } from 'leaflet-ant-path';
 import 'leaflet-draw';
 import 'leaflet/dist/images/marker-shadow.png';
 import 'leaflet/dist/images/marker-icon-2x.png';
-import { MapConverterService } from './../services/map-converter.service';
+import {
+  MapConverterService,
+  IImageDimension,
+} from './../services/map-converter.service';
 import { DomSanitizer } from '@angular/platform-browser';
 
 export interface ILayer {
@@ -53,7 +56,8 @@ export class MapComponent implements AfterContentInit, OnDestroy {
   @Input() layers: ILayer[];
   @Input() mapProps: IMapProps;
   private map: Leaflet.DrawMap;
-  image: any;
+  image: string;
+  imageDimension: IImageDimension = new IImageDimension();
   private editableLayer: Leaflet.FeatureGroup<any>;
   private baseMaps: Leaflet.Control.LayersObject | undefined;
   private overlays: { [key: string]: Leaflet.FeatureGroup } = {};
@@ -63,20 +67,24 @@ export class MapComponent implements AfterContentInit, OnDestroy {
 
   async getImage() {
     this.loading = true;
-    // var imageUrl = '../../../assets/images/logistica_bosch.png';
     this.image = await this.service.providePng();
     this.loading = false;
   }
 
   async ngAfterContentInit() {
-    // this.initMap();
-    await this.getImage();
-
-    this.initCustomMap(this.image);
+    this.initMap();
+    //Get the map from server in png
+    // await this.getImage();
+    // this.initCustomMap(this.image);
     this.layersCreation();
     this.addLayersToMap();
     this.addFeatures();
     if (this.mapProps.drawable) this.enableDrawControl(this.mapProps.editable);
+
+    this.service.dimension.subscribe((dimension: IImageDimension) => {
+      this.imageDimension.h = dimension.h;
+      this.imageDimension.w = dimension.w;
+    });
   }
 
   addFeatures() {
@@ -186,7 +194,7 @@ export class MapComponent implements AfterContentInit, OnDestroy {
   async initCustomMap(imageUrl: string) {
     var bounds = [
       [0, 0],
-      [3712, 3264],
+      [this.imageDimension.h, this.imageDimension.w],
     ] as Leaflet.LatLngBoundsExpression;
     this.map = Leaflet.map('map', {
       crs: Leaflet.CRS.Simple,
