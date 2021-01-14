@@ -72,18 +72,19 @@ export class MapComponent implements AfterContentInit, OnDestroy {
   }
 
   async ngAfterContentInit() {
-    this.initMap();
-    //Get the map from server in png
-    // await this.getImage();
-    // this.initCustomMap(this.image);
-    this.layersCreation();
-    this.addLayersToMap();
-    this.addFeatures();
-    if (this.mapProps.drawable) this.enableDrawControl(this.mapProps.editable);
+    // Use custom map
+    await this.getImage();
 
     this.service.dimension.subscribe((dimension: IImageDimension) => {
       this.imageDimension.h = dimension.h;
       this.imageDimension.w = dimension.w;
+
+      this.initCustomMap(this.image);
+      this.layersCreation();
+      this.addLayersToMap();
+      this.addFeatures();
+      if (this.mapProps.drawable)
+        this.enableDrawControl(this.mapProps.editable);
     });
   }
 
@@ -157,38 +158,6 @@ export class MapComponent implements AfterContentInit, OnDestroy {
         return '';
         break;
     }
-  }
-
-  initMap() {
-    // openstreet tile layer and its settings
-    const OpenStreet = Leaflet.tileLayer(
-      'http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
-      {
-        attribution: 'openstreetmap',
-        noWrap: true,
-      }
-    );
-
-    const Google = Leaflet.tileLayer(
-      'http://mt0.google.com/vt/lyrs=y&hl=en&x={x}&y={y}&z={z}&s=Ga',
-      {
-        attribution: 'google',
-        noWrap: true,
-      }
-    );
-
-    // leaflet map init
-    this.map = Leaflet.map('map', {
-      maxBounds: [
-        [-90, -180],
-        [90, 180],
-      ],
-      layers: [OpenStreet],
-    }).setView([41.125278, 16.866667], 17);
-
-    const scale = Leaflet.control.scale();
-    scale.addTo(this.map);
-    this.baseMaps = { Google, OpenStreet };
   }
 
   async initCustomMap(imageUrl: string) {

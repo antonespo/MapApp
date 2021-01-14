@@ -30,7 +30,7 @@ export class MapConverterService {
     };
     return image;
 
-    // Get data from file
+    // Get data from file (need to hardcode the height and width)
     // const occupancyGrid = await this.getDataFromFile();
     // return this.convertData(occupancyGrid);
   }
@@ -41,8 +41,6 @@ export class MapConverterService {
     var header = new HttpHeaders({
       Authorization:
         'Bearer eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJuYW1laWQiOiJMT0lfVXNlciIsIm5iZiI6MTYxMDM1MjYzMSwiZXhwIjoxNjEwOTU3NDMxLCJpYXQiOjE2MTAzNTI2MzF9.grvQJZnQWHCfCPfSu4fvlGh9X_CrC6-STtHi3VAbqUr35UcKB4B1qeynFKXfwjLRPRbz3wcOzwMjDmRLziTvfQ',
-      'Content-Type': 'application/octet-stream',
-      Accept: 'application/octet-stream',
     });
 
     const res = await this.http
