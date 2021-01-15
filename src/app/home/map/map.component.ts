@@ -7,10 +7,10 @@ import 'leaflet/dist/images/marker-icon-2x.png';
 import {
   MapConverterService,
   IImageDimension,
-} from './../services/map-converter.service';
-import { LayerType, LayerFeature, LayerSetting } from '../model/layer.model';
-import { FeatureAvailable, FeatureType } from '../model/feature.model';
-import { IMapProps } from '../model/map.model';
+} from './services/map-converter.service';
+import { LayerType, LayerFeature, LayerSetting } from './model/layer.model';
+import { FeatureAvailable, FeatureType } from './model/feature.model';
+import { IMapProps } from './model/map.model';
 
 @Component({
   selector: 'app-map',
@@ -38,7 +38,6 @@ export class MapComponent implements AfterContentInit, OnDestroy {
   }
 
   async ngAfterContentInit() {
-    // Use custom map
     await this.getImage();
     this.mapService.dimension.subscribe((dimension: IImageDimension) => {
       this.imageDimension.h = dimension.h;

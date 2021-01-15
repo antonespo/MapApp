@@ -1,8 +1,8 @@
 import { Component, OnInit } from '@angular/core';
 import * as Leaflet from 'leaflet';
-import { LayerType, LayerFeature, LayerSetting } from './model/layer.model';
-import { IMapProps } from './model/map.model';
-import { LayerConverterService } from './services/layer-converter.service';
+import { LayerType, LayerFeature, LayerSetting } from './map/model/layer.model';
+import { IMapProps } from './map/model/map.model';
+import { LayerConverterService } from './map/services/layer-converter.service';
 
 @Component({
   selector: 'app-home',
