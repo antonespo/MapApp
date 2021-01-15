@@ -13,14 +13,35 @@ export class MapConverterService {
   constructor(private http: HttpClient) {}
   private w: number;
   private h: number;
+  private image: string;
+  private token =
+    'eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJuYW1laWQiOiJMT0lfVXNlciIsIm5iZiI6MTYxMDM1MjYzMSwiZXhwIjoxNjEwOTU3NDMxLCJpYXQiOjE2MTAzNTI2MzF9.grvQJZnQWHCfCPfSu4fvlGh9X_CrC6-STtHi3VAbqUr35UcKB4B1qeynFKXfwjLRPRbz3wcOzwMjDmRLziTvfQ';
+
+  private baseUrl = 'https://localhost:44352/api/';
   dimension = new EventEmitter<IImageDimension>();
 
-  async providePng() {
-    // Get data from server
-    const blob = await this.getDataFromServer();
-    let image = URL.createObjectURL(blob);
+  async getPng() {
+    // Con Get da server
+    var header = new HttpHeaders({
+      Authorization: 'Bearer ' + this.token,
+    });
+    const blob = await this.http
+      .get(this.baseUrl + 'map/e818259a-b24f-4e28-d0e9-08d880c53a0a', {
+        headers: header,
+        responseType: 'blob',
+      })
+      .toPromise();
+    this.image = URL.createObjectURL(blob);
+    return this.image;
+
+    // Get data from file (need to hardcode the height and width)
+    // const occupancyGrid = await this.getDataFromFile();
+    // return this.convertData(occupancyGrid);
+  }
+
+  getDimension() {
     var img = new Image();
-    img.src = image;
+    img.src = this.image;
     img.onload = (event: any) => {
       var imageDimension: IImageDimension = {
         w: event.currentTarget?.width,
@@ -28,34 +49,7 @@ export class MapConverterService {
       };
       this.dimension.emit(imageDimension);
     };
-    return image;
-
-    // Get data from file (need to hardcode the height and width)
-    // const occupancyGrid = await this.getDataFromFile();
-    // return this.convertData(occupancyGrid);
   }
-
-  //#region Get data from server
-  private async getDataFromServer() {
-    // Con Get da server
-    var header = new HttpHeaders({
-      Authorization:
-        'Bearer eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJuYW1laWQiOiJMT0lfVXNlciIsIm5iZiI6MTYxMDM1MjYzMSwiZXhwIjoxNjEwOTU3NDMxLCJpYXQiOjE2MTAzNTI2MzF9.grvQJZnQWHCfCPfSu4fvlGh9X_CrC6-STtHi3VAbqUr35UcKB4B1qeynFKXfwjLRPRbz3wcOzwMjDmRLziTvfQ',
-    });
-
-    const res = await this.http
-      .get(
-        'https://localhost:44352/api/map/e818259a-b24f-4e28-d0e9-08d880c53a0a',
-        {
-          headers: header,
-          responseType: 'blob',
-        }
-      )
-      .toPromise();
-    return res;
-  }
-
-  //#endregion
 
   //#region  Get Data from File
   private async getDataFromFile() {

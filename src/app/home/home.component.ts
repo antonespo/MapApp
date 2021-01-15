@@ -1,69 +1,40 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import * as Leaflet from 'leaflet';
-import { FeatureType, ILayer, IMapProps } from './map/map.component';
+import { LayerType, LayerFeature, LayerSetting } from './model/layer.model';
+import { IMapProps } from './model/map.model';
+import { LayerConverterService } from './services/layer-converter.service';
 
 @Component({
   selector: 'app-home',
   templateUrl: './home.component.html',
   styleUrls: ['./home.component.css'],
 })
-export class HomeComponent {
-  public layers: ILayer[] = [
+export class HomeComponent implements OnInit {
+  public layerFeatures: LayerFeature[] = [];
+  public layerSettings: LayerSetting[] = [
     {
-      layerName: 'Delivery Points',
+      layerName: LayerType.DeliveryPoints,
       enabled: true,
       editable: false,
-      featureTypes: [FeatureType.marker],
       color: '#000099',
-      features: [
-        Leaflet.marker([41.1257, 16.867]),
-        Leaflet.marker([41.1248, 16.8647]),
-      ],
     },
     {
-      layerName: 'Limited Accessibility Areas',
+      layerName: LayerType.LimitedAccessibilityAreas,
       enabled: true,
       editable: true,
-      featureTypes: [
-        FeatureType.polygon,
-        FeatureType.rectangle,
-        FeatureType.circle,
-      ],
       color: '#8b0000',
-      features: [
-        Leaflet.circle([41.12618, 16.86775], { radius: 115 }),
-        Leaflet.polygon([
-          [41.126812, 16.86469],
-          [41.127207, 16.8657],
-          [41.126579, 16.86619],
-          [41.126502, 16.864872],
-        ]),
-        Leaflet.rectangle([
-          [41.1241, 16.8692],
-          [41.12577, 16.8692],
-          [41.12577, 16.8704],
-          [41.1241, 16.8704],
-        ]),
-      ],
     },
     {
-      layerName: 'Lanes',
+      layerName: LayerType.Lanes,
       enabled: true,
       editable: false,
-      featureTypes: [FeatureType.polyline],
       color: '#013220',
-      features: [
-        Leaflet.polyline([
-          [41.12377, 16.86533],
-          [41.12387, 16.86646],
-          [41.12315, 16.86658],
-          [41.123165, 16.86718],
-        ]),
-      ],
     },
   ];
-
   public mapProps: IMapProps = { drawable: true, editable: true };
 
-  constructor() {}
+  constructor(private layerService: LayerConverterService) {}
+  async ngOnInit() {
+    this.layerFeatures = await this.layerService.getLayerFeature();
+  }
 }

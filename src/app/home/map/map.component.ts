@@ -1,11 +1,4 @@
-import {
-  AfterContentInit,
-  AfterViewInit,
-  Component,
-  Input,
-  OnDestroy,
-  OnInit,
-} from '@angular/core';
+import { AfterContentInit, Component, Input, OnDestroy } from '@angular/core';
 import * as Leaflet from 'leaflet';
 import { antPath } from 'leaflet-ant-path';
 import 'leaflet-draw';
@@ -15,37 +8,9 @@ import {
   MapConverterService,
   IImageDimension,
 } from './../services/map-converter.service';
-import { DomSanitizer } from '@angular/platform-browser';
-
-export interface ILayer {
-  layerName: string;
-  enabled: boolean;
-  editable: boolean;
-  featureTypes: FeatureType[];
-  color: string;
-  features: (Leaflet.Path | Leaflet.Marker)[];
-}
-
-export interface IMapProps {
-  drawable: boolean;
-  editable: boolean;
-}
-
-export enum FeatureType {
-  polyline,
-  polygon,
-  rectangle,
-  circle,
-  marker,
-}
-
-interface FeatureAvailable {
-  polyline?: boolean;
-  polygon?: boolean;
-  rectangle?: boolean;
-  circle?: boolean;
-  marker?: boolean;
-}
+import { LayerType, LayerFeature, LayerSetting } from '../model/layer.model';
+import { FeatureAvailable, FeatureType } from '../model/feature.model';
+import { IMapProps } from '../model/map.model';
 
 @Component({
   selector: 'app-map',
@@ -53,7 +18,8 @@ interface FeatureAvailable {
   styleUrls: ['./map.component.css'],
 })
 export class MapComponent implements AfterContentInit, OnDestroy {
-  @Input() layers: ILayer[];
+  @Input() layerFeatures: LayerFeature[];
+  @Input() layerSettings: LayerSetting[];
   @Input() mapProps: IMapProps;
   private map: Leaflet.DrawMap;
   image: string;
@@ -63,19 +29,18 @@ export class MapComponent implements AfterContentInit, OnDestroy {
   private overlays: { [key: string]: Leaflet.FeatureGroup } = {};
   loading: boolean = false;
 
-  constructor(private service: MapConverterService) {}
+  constructor(private mapService: MapConverterService) {}
 
   async getImage() {
     this.loading = true;
-    this.image = await this.service.providePng();
+    this.image = await this.mapService.getPng();
     this.loading = false;
   }
 
   async ngAfterContentInit() {
     // Use custom map
     await this.getImage();
-
-    this.service.dimension.subscribe((dimension: IImageDimension) => {
+    this.mapService.dimension.subscribe((dimension: IImageDimension) => {
       this.imageDimension.h = dimension.h;
       this.imageDimension.w = dimension.w;
 
@@ -86,18 +51,25 @@ export class MapComponent implements AfterContentInit, OnDestroy {
       if (this.mapProps.drawable)
         this.enableDrawControl(this.mapProps.editable);
     });
+    this.mapService.getDimension();
   }
 
   addFeatures() {
-    this.layers.forEach((layer) => {
+    this.layerFeatures.forEach((layer) => {
+      const layerSetting = this.layerSettings.find(
+        (layerSetting) => layerSetting.layerName === layer.layerName
+      );
       layer.features.forEach((feature) => {
-        this.addCustomFeatureSytle(feature, layer);
-        feature.addTo(this.overlays[`${layer.layerName}`]);
+        this.addCustomFeatureSytle(feature, layerSetting!);
+        feature.addTo(this.overlays[`${LayerType[layer.layerName]}`]);
       });
     });
   }
 
-  addCustomFeatureSytle(feature: Leaflet.Path | Leaflet.Marker, layer: ILayer) {
+  addCustomFeatureSytle(
+    feature: Leaflet.Path | Leaflet.Marker,
+    layer: LayerSetting
+  ) {
     feature.bindTooltip(this.printer(feature));
     if (feature instanceof Leaflet.Path) {
       feature.options.color = layer.color;
@@ -177,16 +149,16 @@ export class MapComponent implements AfterContentInit, OnDestroy {
   }
 
   findLayerByFeature(feature: FeatureType) {
-    var layer: ILayer | undefined;
-    this.layers.forEach((l) => {
+    var layer: LayerFeature | undefined;
+    this.layerFeatures.forEach((l) => {
       if (l.featureTypes.includes(feature)) layer = l;
     });
-    return layer;
+    return layer?.layerName;
   }
 
   listAvailableFeatures() {
     var features: FeatureAvailable = {};
-    this.layers.forEach((layer) => {
+    this.layerFeatures.forEach((layer) => {
       layer.featureTypes.forEach((feature) => {
         switch (feature) {
           case FeatureType.circle:
@@ -213,13 +185,15 @@ export class MapComponent implements AfterContentInit, OnDestroy {
   }
 
   layersCreation() {
-    this.layers.forEach((layer) => {
-      this.overlays[`${layer.layerName}`] = new Leaflet.FeatureGroup();
+    this.layerSettings.forEach((layer) => {
+      this.overlays[
+        `${LayerType[layer.layerName]}`
+      ] = new Leaflet.FeatureGroup();
       if (layer.enabled) {
-        this.overlays[`${layer.layerName}`].addTo(this.map);
+        this.overlays[`${LayerType[layer.layerName]}`].addTo(this.map);
       }
       if (layer.editable) {
-        this.editableLayer = this.overlays[`${layer.layerName}`];
+        this.editableLayer = this.overlays[`${LayerType[layer.layerName]}`];
       }
     });
   }
@@ -237,27 +211,34 @@ export class MapComponent implements AfterContentInit, OnDestroy {
       var layer = e.layer;
       switch (e.layerType) {
         case 'polyline':
-          var lay = this.findLayerByFeature(FeatureType.polyline);
+          var layerName = this.findLayerByFeature(FeatureType.polyline);
           break;
         case 'polygon':
-          var lay = this.findLayerByFeature(FeatureType.polygon);
+          var layerName = this.findLayerByFeature(FeatureType.polygon);
           break;
         case 'rectangle':
-          var lay = this.findLayerByFeature(FeatureType.rectangle);
+          var layerName = this.findLayerByFeature(FeatureType.rectangle);
           break;
         case 'circle':
-          var lay = this.findLayerByFeature(FeatureType.circle);
+          var layerName = this.findLayerByFeature(FeatureType.circle);
           break;
         case 'marker':
-          var lay = this.findLayerByFeature(FeatureType.marker);
+          var layerName = this.findLayerByFeature(FeatureType.marker);
           break;
-
         default:
           break;
       }
-      if (lay) this.addCustomFeatureSytle(layer, lay);
+      if (layerName !== undefined) {
+        var layerSetting: LayerSetting;
+        this.layerSettings.forEach((ls) => {
+          if (ls.layerName === layerName) {
+            layerSetting = ls;
+          }
+        });
+        this.addCustomFeatureSytle(layer, layerSetting!);
+        layer.addTo(this.overlays[`${LayerType[layerName]}`]);
+      }
       layer.bindTooltip(this.printer(layer));
-      if (lay) layer.addTo(this.overlays[`${lay.layerName}`]);
 
       // alert(this.printer(layer));
     });

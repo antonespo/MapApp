@@ -8,16 +8,10 @@ import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { FormsModule } from '@angular/forms';
 import { BsDropdownModule } from 'ngx-bootstrap/dropdown';
 import { HomeComponent } from './home/home.component';
-import { AppHighlightDirective } from './home/app-highlight.directive';
 import { MapComponent } from './home/map/map.component';
 
 @NgModule({
-  declarations: [
-    AppComponent,
-    HomeComponent,
-    AppHighlightDirective,
-    MapComponent,
-  ],
+  declarations: [AppComponent, HomeComponent, MapComponent],
   imports: [
     BrowserModule,
     AppRoutingModule,
