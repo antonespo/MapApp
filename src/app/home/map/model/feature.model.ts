@@ -1,31 +1,31 @@
 export class ShapeBase {
   id: string;
 }
-export class LatLng {
+export class LatLngDto {
   id: string;
   latY: number;
   lngX: number;
 }
 
-export class Polygon extends ShapeBase {
-  latLngs: LatLng[];
+export class PolygonDto extends ShapeBase {
+  latLngs: LatLngDto[];
 }
 
-export class Rectangle extends ShapeBase {
-  latLngs: LatLng[];
+export class RectangleDto extends ShapeBase {
+  latLngs: LatLngDto[];
 }
 
-export class Polyline extends ShapeBase {
-  latLngs: LatLng[];
+export class PolylineDto extends ShapeBase {
+  latLngs: LatLngDto[];
 }
 
-export class Circle extends ShapeBase {
-  latLng: LatLng;
+export class CircleDto extends ShapeBase {
+  latLng: LatLngDto;
   radius: number;
 }
 
-export class Marker extends ShapeBase {
-  latLng: LatLng;
+export class MarkerDto extends ShapeBase {
+  latLng: LatLngDto;
 }
 
 export enum FeatureType {

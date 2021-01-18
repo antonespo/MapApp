@@ -15,7 +15,7 @@ export class MapConverterService {
   private h: number;
   private image: string;
   private token =
-    'eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJuYW1laWQiOiJMT0lfVXNlciIsIm5iZiI6MTYxMDM1MjYzMSwiZXhwIjoxNjEwOTU3NDMxLCJpYXQiOjE2MTAzNTI2MzF9.grvQJZnQWHCfCPfSu4fvlGh9X_CrC6-STtHi3VAbqUr35UcKB4B1qeynFKXfwjLRPRbz3wcOzwMjDmRLziTvfQ';
+    'eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJuYW1laWQiOiJMT0lfVXNlciIsIm5iZiI6MTYxMDk3MzIzMywiZXhwIjoxNjExNTc4MDMzLCJpYXQiOjE2MTA5NzMyMzN9.MbOYLAzLp8lzARz49Whl9wJOF9x0ewtDm1UIb4yimETCSI0b-wdP9PE3MSZO5X_yv9lp97vEcPwZ3ZjmQBfQzA';
 
   private baseUrl = 'https://localhost:44352/api/';
   dimension = new EventEmitter<IImageDimension>();

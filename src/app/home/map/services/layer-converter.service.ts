@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
-import { Layer, LayerType, LayerFeature } from '../model/layer.model';
+import { LayerDto, LayerType, LayerFeature } from '../model/layer.model';
 import * as Leaflet from 'leaflet';
 import { FeatureType } from '../model/feature.model';
 
@@ -9,7 +9,7 @@ import { FeatureType } from '../model/feature.model';
 })
 export class LayerConverterService {
   private token =
-    'eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJuYW1laWQiOiJMT0lfVXNlciIsIm5iZiI6MTYxMDM1MjYzMSwiZXhwIjoxNjEwOTU3NDMxLCJpYXQiOjE2MTAzNTI2MzF9.grvQJZnQWHCfCPfSu4fvlGh9X_CrC6-STtHi3VAbqUr35UcKB4B1qeynFKXfwjLRPRbz3wcOzwMjDmRLziTvfQ';
+    'eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJuYW1laWQiOiJMT0lfVXNlciIsIm5iZiI6MTYxMDk3MzIzMywiZXhwIjoxNjExNTc4MDMzLCJpYXQiOjE2MTA5NzMyMzN9.MbOYLAzLp8lzARz49Whl9wJOF9x0ewtDm1UIb4yimETCSI0b-wdP9PE3MSZO5X_yv9lp97vEcPwZ3ZjmQBfQzA';
   private baseUrl = 'https://localhost:44352/api/';
 
   constructor(private http: HttpClient) {}
@@ -27,34 +27,53 @@ export class LayerConverterService {
     });
 
     const res = await this.http
-      .get<Layer[]>(this.baseUrl + 'layer', {
+      .get<LayerDto[]>(this.baseUrl + 'layer', {
         headers: header,
       })
       .toPromise();
     return res;
   }
 
-  private getFeatureType(layer: Layer) {
+  private getFeatureType(layer: LayerDto) {
     var featureTypes: FeatureType[] = [];
-    if (layer.circles && layer.circles.length > 0) {
-      featureTypes.push(FeatureType.circle);
-    }
-    if (layer.rectangles && layer.rectangles.length > 0) {
-      featureTypes.push(FeatureType.rectangle);
-    }
-    if (layer.polygons && layer.polygons.length > 0) {
-      featureTypes.push(FeatureType.polygon);
-    }
-    if (layer.polyline && layer.polyline.length > 0) {
-      featureTypes.push(FeatureType.polyline);
-    }
-    if (layer.markers && layer.markers.length > 0) {
-      featureTypes.push(FeatureType.marker);
-    }
+    layer.features.forEach((feature) => {
+      switch (feature.featureType.toLowerCase()) {
+        case FeatureType[FeatureType.circle]:
+          featureTypes.push(FeatureType.circle);
+          break;
+        case FeatureType[FeatureType.polygon]:
+          featureTypes.push(FeatureType.polygon);
+          break;
+        case FeatureType[FeatureType.polyline]:
+          featureTypes.push(FeatureType.polyline);
+          break;
+        case FeatureType[FeatureType.rectangle]:
+          featureTypes.push(FeatureType.rectangle);
+          break;
+        case FeatureType[FeatureType.marker]:
+          featureTypes.push(FeatureType.marker);
+          break;
+
+        default:
+          break;
+      }
+    });
+    // if (layer.rectangles && layer.rectangles.length > 0) {
+    //   featureTypes.push(FeatureType.rectangle);
+    // }
+    // if (layer.polygons && layer.polygons.length > 0) {
+    //   featureTypes.push(FeatureType.polygon);
+    // }
+    // if (layer.polyline && layer.polyline.length > 0) {
+    //   featureTypes.push(FeatureType.polyline);
+    // }
+    // if (layer.markers && layer.markers.length > 0) {
+    //   featureTypes.push(FeatureType.marker);
+    // }
     return featureTypes;
   }
 
-  private getFeatures(layer: Layer) {
+  private getFeatures(layer: LayerDto) {
     var features: (Leaflet.Path | Leaflet.Marker<any>)[] = [];
     if (layer.circles && layer.circles.length > 0) {
       layer.circles.forEach((circle) => {
@@ -79,9 +98,9 @@ export class LayerConverterService {
       });
       features.push(Leaflet.rectangle(points));
     }
-    if (layer.polyline && layer.polyline.length > 0) {
+    if (layer.polylines && layer.polylines.length > 0) {
       var points: [number, number][] = [];
-      layer.polyline.forEach((polyline) => {
+      layer.polylines.forEach((polyline) => {
         polyline.latLngs.forEach((latLng) => {
           points.push([latLng.latY, latLng.lngX]);
         });
@@ -100,7 +119,7 @@ export class LayerConverterService {
     return features;
   }
 
-  private layerConverter(layers: Layer[]) {
+  private layerConverter(layers: LayerDto[]) {
     var mapLayers: LayerFeature[] = [];
     layers.forEach((layer) => {
       var featureTypes = this.getFeatureType(layer);

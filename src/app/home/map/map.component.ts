@@ -11,6 +11,7 @@ import {
 import { LayerType, LayerFeature, LayerSetting } from './model/layer.model';
 import { FeatureAvailable, FeatureType } from './model/feature.model';
 import { IMapProps } from './model/map.model';
+import { FeatureConverterService } from './services/feature-converter.service';
 
 @Component({
   selector: 'app-map',
@@ -29,7 +30,10 @@ export class MapComponent implements AfterContentInit, OnDestroy {
   private overlays: { [key: string]: Leaflet.FeatureGroup } = {};
   loading: boolean = false;
 
-  constructor(private mapService: MapConverterService) {}
+  constructor(
+    private mapService: MapConverterService,
+    private featureService: FeatureConverterService
+  ) {}
 
   async getImage() {
     this.loading = true;
@@ -206,7 +210,7 @@ export class MapComponent implements AfterContentInit, OnDestroy {
   }
 
   createFeatureHandler() {
-    this.map.on('draw:created', (e: any) => {
+    this.map.on('draw:created', async (e: any) => {
       var layer = e.layer;
       switch (e.layerType) {
         case 'polyline':
@@ -236,6 +240,8 @@ export class MapComponent implements AfterContentInit, OnDestroy {
         });
         this.addCustomFeatureSytle(layer, layerSetting!);
         layer.addTo(this.overlays[`${LayerType[layerName]}`]);
+
+        await this.featureService.postFeature(e);
       }
       layer.bindTooltip(this.printer(layer));
 

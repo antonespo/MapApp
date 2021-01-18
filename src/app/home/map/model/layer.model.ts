@@ -1,10 +1,10 @@
 import {
-  Circle,
+  CircleDto,
   FeatureType,
-  Marker,
-  Polygon,
-  Polyline,
-  Rectangle,
+  MarkerDto,
+  PolygonDto,
+  PolylineDto,
+  RectangleDto,
 } from './feature.model';
 import * as Leaflet from 'leaflet';
 
@@ -15,14 +15,15 @@ export enum LayerType {
 }
 
 // ricevuto da server
-export class Layer {
+export class LayerDto {
   id: string;
   name: string;
-  rectangles: Rectangle[];
-  circles: Circle[];
-  markers: Marker[];
-  polygons: Polygon[];
-  polyline: Polyline[];
+  features: { featureType: string }[];
+  rectangles: RectangleDto[];
+  circles: CircleDto[];
+  markers: MarkerDto[];
+  polygons: PolygonDto[];
+  polylines: PolylineDto[];
 }
 
 // classe completa per poter renderizzare mappe
