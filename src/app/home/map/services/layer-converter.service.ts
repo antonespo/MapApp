@@ -90,31 +90,31 @@ export class LayerConverterService {
       });
     }
     if (layer.rectangles && layer.rectangles.length > 0) {
-      var points: [number, number][] = [];
       layer.rectangles.forEach((rect) => {
+        var points: [number, number][] = [];
         rect.latLngs.forEach((latLng) => {
           points.push([latLng.latY, latLng.lngX]);
         });
+        features.push(Leaflet.rectangle(points));
       });
-      features.push(Leaflet.rectangle(points));
     }
     if (layer.polylines && layer.polylines.length > 0) {
-      var points: [number, number][] = [];
       layer.polylines.forEach((polyline) => {
+        var points: [number, number][] = [];
         polyline.latLngs.forEach((latLng) => {
           points.push([latLng.latY, latLng.lngX]);
         });
+        features.push(Leaflet.polyline(points));
       });
-      features.push(Leaflet.polyline(points));
     }
     if (layer.polygons && layer.polygons.length > 0) {
-      var points: [number, number][] = [];
       layer.polygons.forEach((polygon) => {
+        var points: [number, number][] = [];
         polygon.latLngs.forEach((latLng) => {
           points.push([latLng.latY, latLng.lngX]);
         });
+        features.push(Leaflet.polygon(points));
       });
-      features.push(Leaflet.polygon(points));
     }
     return features;
   }
